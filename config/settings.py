@@ -96,3 +96,16 @@ else:
 
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'storage/media'
+REST_FRAMEWORK = {
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.LimitOffsetPagination',
+    'PAGE_SIZE': 100
+}
+
+CACHES = {
+    "default": {
+        "BACKEND": "django.core.cache.backends.redis.RedisCache",
+        "LOCATION": "redis://localhost:6379/",
+        "KEY_PREFIX": "imdb",
+        # "TIMEOUT": 60 * 60
+    }
+}
