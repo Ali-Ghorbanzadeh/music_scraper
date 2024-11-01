@@ -1,19 +1,20 @@
-from .models import Music
+from .models import Music, Artist
 from rest_framework.viewsets import ModelViewSet
 from .scraper import Scraper
-from .serializer import MusicSerializer
+from .serializer import MusicSerializer, ArtistSerializer
 from django.utils.decorators import method_decorator
 from django.views.decorators.cache import cache_page
 from time import time
-from django.core.cache import cache
-from rest_framework.response import Response
+from apps.core.models import CacheRetrieveMixin
+from rest_framework.generics import ListAPIView, RetrieveAPIView
 
 
-@method_decorator(cache_page(30), name='list')
-class MusicViewSet(ModelViewSet):
-    queryset = Music.objects.all().order_by('-id')
+@method_decorator(cache_page(60 * 60), name='list')
+class MusicViewSet(CacheRetrieveMixin, ModelViewSet):
+    queryset = Music.objects.all().order_by('realsed_time')
     serializer_class = MusicSerializer
     first_scraped = False
+    cache_time = 10
 
     def list(self, request, *args, **kwargs):
         if not self.__class__.first_scraped:
@@ -29,23 +30,36 @@ class MusicViewSet(ModelViewSet):
     def perform_destroy(self, instance):
         instance.delete()
 
-    def get_object(self):
-        self.queryset = Music.objects.archive()
-        return super().get_object()
 
-    def retrieve(self, request, *args, **kwargs):
-        music = cache.get(kwargs.get('pk'))
-        if music is None:
-            instance = self.get_object()
-            cache.set(
-                key=kwargs.get('pk'),
-                value=instance,
-                timeout=60,
-            )
-            print('cashed')
-            return super().retrieve(request, *args, **kwargs)
-        serializer = self.get_serializer(music)
-        return Response(serializer.data)
+@method_decorator(cache_page(60 * 60), name='list')
+class ArtistMusicsViewSet(CacheRetrieveMixin, ModelViewSet):
+    queryset = Artist.objects.all()
+    serializer_class = ArtistSerializer
+    cache_time = 60 * 5
+
+
+@method_decorator(cache_page(60 * 60), name='list')
+class PopularArtistListAPIView(ListAPIView):
+    queryset = Artist.objects.filter(is_popular=True)
+    serializer_class = ArtistSerializer
+
+
+@method_decorator(cache_page(60 * 60), name='retrieve')
+class SearchMusicsAPIView(CacheRetrieveMixin, RetrieveAPIView):
+    queryset = Music.objects.all().order_by('realsed_time')
+    serializer_class = MusicSerializer
+    lookup_field = 'name'
+    cache_time = 60 * 60
+
+
+@method_decorator(cache_page(60 * 60), name='retrieve')
+class SearchArtistsAPIView(CacheRetrieveMixin, RetrieveAPIView):
+    queryset = Artist.objects.all()
+    serializer_class = ArtistSerializer
+    lookup_field = 'name'
+    cache_time = 60 * 60
+
+
 
 
 

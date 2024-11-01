@@ -5,6 +5,10 @@ from apps.core.models import TimeStampMixin, LogicalDeleteMixin
 class Artist(TimeStampMixin, LogicalDeleteMixin):
     name = models.CharField(max_length=255, unique=True)
     url = models.URLField(null=True, blank=True)
+    is_popular = models.BooleanField(default=False)
+
+    def all_musics(self):
+        return self.musics.all().values_list()
 
     def __str__(self):
         return self.name

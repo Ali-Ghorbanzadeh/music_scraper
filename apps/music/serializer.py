@@ -3,9 +3,15 @@ from .models import Artist, Music, Image
 
 
 class ArtistSerializer(ModelSerializer):
+
     class Meta:
         model = Artist
-        fields = '__all__'
+        fields = ['id',
+                  'name',
+                  'url',
+                  'is_popular',
+                  'is_deleted',
+                  'all_musics']
 
 
 class ImageSerializer(ModelSerializer):

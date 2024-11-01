@@ -32,7 +32,6 @@ class Scraper:
     @classmethod
     def set_details(cls, music):
         music_url = music.get('href')
-        print(cache.get(music_url))
         if cache.get(music_url):
             return False
 
